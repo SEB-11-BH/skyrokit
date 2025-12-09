@@ -55,6 +55,36 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+// Edit
+router.get('/:applicationId/edit', async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.session.user._id);
+    const application = currentUser.applications.id(req.params.applicationId);
+    res.render('applications/edit.ejs', {
+      application,
+    });
+  } catch (error) {
+    console.log(error);
+    res.redirect('/');
+  }
+});
+
+router.put('/:id', async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.session.user._id);
+    const application = currentUser.applications.id(req.params.id);
+
+    application.set(req.body);
+
+    await currentUser.save();
+
+    res.redirect(`/users/${currentUser._id}/applications/${application._id}`);
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
+});
+
 router.delete('/:id', async (req, res) => {
   try {
     const currentUser = await User.findById(req.session.user._id);

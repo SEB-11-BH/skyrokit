@@ -1,12 +1,14 @@
 const express = require('express');
-const { redirect } = require('react-router-dom');
 const User = require('../models/user');
 
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    res.render('applications/index.ejs');
+    const currentUser = await User.findById(req.session.user._id);
+    const { applications } = currentUser;
+
+    res.render('applications/index.ejs', { applications });
   } catch (err) {
     res.redirect('/');
   }
@@ -26,7 +28,6 @@ router.post('/', async (req, res) => {
     // first find the current user
     const currentUser = await User.findById(req.session.user._id);
 
-    console.log(currentUser);
     // create the application payload
     // push the new application to the user.applications
     currentUser.applications.push(req.body);
@@ -38,6 +39,32 @@ router.post('/', async (req, res) => {
     res.redirect('/');
   }
   // redirect to apps index
+});
+
+router.get('/:id', async (req, res) => {
+  try {
+    // find the user
+    const currentUser = await User.findById(req.session.user._id);
+    // find the specific app in the apps array of the user
+    const application = currentUser.applications.id(req.params.id);
+    // render the template for that app
+    res.render('applications/show.ejs', { application });
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
+});
+
+router.delete('/:id', async (req, res) => {
+  try {
+    const currentUser = await User.findById(req.session.user._id);
+    currentUser.applications.id(req.params.id).deleteOne();
+    await currentUser.save();
+    res.redirect(`/users/${currentUser._id}/applications`);
+  } catch (err) {
+    console.error(err);
+    res.redirect('/');
+  }
 });
 
 module.exports = router;

@@ -1,4 +1,5 @@
 const express = require('express');
+const { redirect } = require('react-router-dom');
 const User = require('../models/user');
 
 const router = express.Router();
@@ -23,14 +24,19 @@ router.get('/new', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     // first find the current user
-    const current_user = User.findById();
+    const currentUser = await User.findById(req.session.user._id);
+
+    console.log(currentUser);
+    // create the application payload
+    // push the new application to the user.applications
+    currentUser.applications.push(req.body);
+    // await user.save()
+    await currentUser.save();
+    res.redirect(`/users/${currentUser._id}/applications`);
   } catch (err) {
     console.error(err);
     res.redirect('/');
   }
-  // create the application payload
-  // push the new application to the user.applications
-  // await user.save()
   // redirect to apps index
 });
 
